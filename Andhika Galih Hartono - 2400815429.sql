@@ -1,3 +1,4 @@
+-- Create Table
 CREATE TABLE TableSpecification (
     TableId CHAR(36) NOT NULL PRIMARY KEY,
     TableNumber INT NULL,
@@ -14,33 +15,62 @@ CREATE TABLE TableOrder (
     FOREIGN KEY (TableId) REFERENCES TableSpecification(TableId)
 );
 
+-- Create Table Many-to-Many Relationship
+CREATE TABLE TableOrderDetail (
+    TableOrderDetailId CHAR(36) NOT NULL PRIMARY KEY,
+    TableOrderId CHAR(36) NOT NULL,
+    TableId CHAR(36) NOT NULL,
+    FOREIGN KEY (TableOrderId) REFERENCES TableOrder(TableOrderId),
+    FOREIGN KEY (TableId) REFERENCES TableSpecification(TableId),
+    UNIQUE(TableOrderId, TableId)
+);
+
+-- Create Table one-to-one Relationship
+CREATE TABLE TableAdditionalInfo (
+    TableAdditionalInfoId CHAR(36) NOT NULL PRIMARY KEY,
+    TableId CHAR(36) NOT NULL UNIQUE,
+    AdditionalInfo VARCHAR(255) NULL,
+    FOREIGN KEY (TableId) REFERENCES TableSpecification(TableId) ON DELETE CASCADE
+);
+
+-- Inser Dummy data to each table
 INSERT INTO TableSpecification (TableId, TableNumber, ChairNumber, TablePic, TableType)
 VALUES 
-('1', 1, 4, 'table1.jpg', 'Indoor'),
-('2', 2, 2, 'table2.jpg', 'Outdoor'),
-('3', 3, 6, 'table3.jpg', 'VIP'),
-('4', 4, 4, 'table4.jpg', 'Indoor');
+('table-uuid-1', 1, 4, 'pic1.jpg', 'Dining'),
+('table-uuid-2', 2, 2, 'pic2.jpg', 'Coffee'),
+('table-uuid-3', 3, 6, 'pic3.jpg', 'Meeting'),
+('table-uuid-4', 4, 4, 'pic4.jpg', 'Bar');
 
 INSERT INTO TableOrder (TableOrderId, TableId, MenuName, QuantityOrder)
 VALUES 
-('a', '1', 'Pizza', 2),
-('b', '2', 'Pasta', 1),
-('c', '3', 'Burger', 3),
-('d', '1', 'Salad', 1);
+('order-uuid-1', 'table-uuid-1', 'Pasta', 2),
+('order-uuid-2', 'table-uuid-1', 'Salad', 1),
+('order-uuid-3', 'table-uuid-2', 'Coffee', 2),
+('order-uuid-4', 'table-uuid-3', 'Tea', 3);
 
+INSERT INTO TableOrderDetail (TableOrderDetailId, TableOrderId, TableId)
+VALUES 
+('detail-uuid-1', 'order-uuid-1', 'table-uuid-1'),
+('detail-uuid-2', 'order-uuid-2', 'table-uuid-1'),
+('detail-uuid-3', 'order-uuid-3', 'table-uuid-2'),
+('detail-uuid-4', 'order-uuid-4', 'table-uuid-3');
 
+INSERT INTO TableAdditionalInfo (TableAdditionalInfoId, TableId, AdditionalInfo)
+VALUES 
+('info-uuid-1', 'table-uuid-1', 'Extra cushions available.'),
+('info-uuid-2', 'table-uuid-2', 'Near the window with a view.');
+
+-- Left Join TableSpecification with TableOrder
 SELECT 
-    ts.TableId,
-    ts.TableNumber,
-    ts.ChairNumber,
-    ts.TablePic,
-    ts.TableType,
-    t_order.TableOrderId,
-    t_order.MenuName,
-    t_order.QuantityOrder
+    t.TableId,
+    t.TableNumber,
+    t.ChairNumber,
+    t.TablePic,
+    t.TableType,
+    o.TableOrderId,
+    o.MenuName,
+    o.QuantityOrder
 FROM 
-    TableSpecification ts
+    TableSpecification t
 LEFT JOIN 
-    TableOrder t_order
-ON 
-    ts.TableId = t_order.TableId;
+    TableOrder o ON t.TableId = o.TableId;
